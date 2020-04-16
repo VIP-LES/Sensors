@@ -15,7 +15,7 @@ LSM9DS1 imu;
 
 
 int geiger_input = 2;
-unsigned long count = 0;
+int count = 0;
 
 int interval = 300; 
  
@@ -57,7 +57,8 @@ void setup() {
 
 
 void loop() {
-    double P [2];
+    char stat;
+    double T; 
     float temper = 0;
     float pressure = 0;
     float alt = 0; 
@@ -71,20 +72,18 @@ void loop() {
     int16_t ax = 0;
     int16_t ay = 0;
     int16_t az = 0;
-
-struct thermo {
-  double P;
-  double T;
-};
     
     for (int i = 0; i < interval; i++) {
-      struct thermo temandpres;
       
-      temandpres = getPandT();
+      
+      stat = bmp180_sensor.startTemperature();
+      if (stat != 0)
+      {
+      delay(stat);
+      bmp180_sensor.getTemperature(T);
+      }
      
-      temper = temper + temandpres[0];
-      pressure = pressure + temandpres[1];
-      
+            
       imu.readAccel(); 
       imu.readMag(); 
       imu.readGyro();
@@ -149,32 +148,17 @@ void countPulse(){
   attachInterrupt(0,countPulse,FALLING);
 }
 
-
-
-
-struct thermo getPandT(){    
-struct thermo vars;  
-      static double tp;
-      double T,P; 
-      char stat
-      stat = bmp180_sensor.startTemperature()
-      if(stat != 0):
+double getP(double T){   
+      double P; 
+      char stat;
+      stat = bmp180_sensor.startPressure(3);
+      if(stat != 0)
       {
-      delay(stat);
-      stat = bmp180_sensor.getTemperature(T);
-      if(stat!=0):
+        delay(stat);
+        stat = bmp180_sensor.getPressure(P,T);
+        if (stat!=0) 
         {
-           stat = bmp180_sensor.startPressure(3)
-           if(stat != 0)
-           {
-            delay(stat);
-            stat = bmp180_sensor.getPressure(P,T);
-            if (stat!=0) 
-            {
-              vars.P = Pres;
-              vars.T = Temp;
-            }else Serial.println("error retrieving pressure measurement\n")
-          }else Serial.println("error starting pressure measurement\n")
-        }else Serial.println("error retrieving temperature measurement\n"  
-      }else Serial.println("error starting temperature measurement\n")
+          return(P);
+             }else Serial.println("error retrieving pressure measurement\n");
+          }else Serial.println("error starting pressure measurement\n");  
 }
